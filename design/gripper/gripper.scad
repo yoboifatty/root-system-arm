@@ -38,6 +38,7 @@ module tap_holes(x_pos, y_pos) {
 }
 
 // ---------- small involute gear with bore (+ optional features) -----------
+// Uses OpenSCAD's built-in involute() from standard library
 module drive_gear(z, bore_d, pilot = false, flat_key = false) {
     difference() {
         linear_extrude(height = GEAR_H) involute(module = GM, n = z);
@@ -96,82 +97,50 @@ module gripper_body() {
             }
         }
 
-        // Gear pockets — cavities where pinion + drive gear sit
-        translate([0, TENDRIL_R_BASE * 2 - 5, 18]) {
-            cylinder(h = GEAR_H + 2, r1 = GM * Z_PIN / 2 + 3, r2 = GM * Z_PIN / 2 + 3);
-        }
-        translate([GM * (Z_PIN + Z_DRV) / 2, TENDRIL_R_BASE * 2 - 5, 18]) {
-            cylinder(h = GEAR_H + 2, r1 = GM * Z_DRV / 2 + 3, r2 = GM * Z_DRV / 2 + 3);
+        // Lead screw channel — where the screw slides through
+        translate([TENDRIL_LENGTH/2 - 5, JAW_OPEN, 20]) {
+            cylinder(h = TENDRIL_R_BASE * 3, d = LEAD_D + 1);
         }
 
-        // Motor shaft bore along Y at the motor axis
-        translate([0, TENDRIL_R_BASE * 2 + MOTOR_FACE/2 + 5, 20]) rotate([90, 0, 0]) {
-            cylinder(h = MOTOR_FACE + 10, d = SHAFT_D + 0.5);
-        }
-
-        // Lead-screw clearance bore along Y
-        translate([GM * (Z_PIN + Z_DRV) / 2, -TENDRIL_R_BASE * 2 - 5, 20]) rotate([90, 0, 0]) {
-            cylinder(h = TENDRIL_R_BASE * 4 + 10, d = LEAD_D + 0.5);
-        }
-
-        // Driven-jaw channel — open-ended slot where tendril slides
-        translate([GM * (Z_PIN + Z_DRV) / 2 - NUT_OD/2 - 6, JAW_OPEN - 4, 10]) {
-            cube([(TENDRIL_LENGTH + 8) - (GM * (Z_PIN + Z_DRV) / 2 - NUT_OD/2 - 6),
-                  (JAW_CLOSED + 5) - (JAW_OPEN - 4),
-                  TENDRIL_R_BASE * 3]);
-        }
-
-        // Wrist mounting face — M3 tap-in-plastic on shared tab pattern
-        tap_holes(-TENDRIL_R_BASE * 2, 0);
-    }
-}
-
-// ================= DRIVEN ROOT TENDRIL (nut-driven) =============================
-module driven_tendril() {
-    difference() {
-        union() {
-            // Tendril jaw — tapered organic form that curls slightly at tip
-            translate([TENDRIL_LENGTH/2, -(JAW_CLOSED + TENDRIL_R_TIP), 15]) {
-                hull() {
-                    cylinder(h = TENDRIL_R_BASE * 2, r1 = TENDRIL_R_BASE, r2 = TENDRIL_R_TIP);
-
-                    // Slight curl at the tip — organic grasping motion
-                    translate([0, -TENDRIL_R_TIP/2, TENDRIL_LENGTH/2]) {
-                        sphere(r = TENDRIL_R_TIP * 1.5);
-                    }
+        // Driven tendril jaw — moves along the lead screw channel
+        translate([TENDRIL_LENGTH/2 - 5, JAW_OPEN, 20]) {
+            hull() {
+                cylinder(h = TENDRIL_R_BASE * 2, r1 = TENDRIL_R_BASE, r2 = TENDRIL_R_TIP);
+                translate([0, 0, TENDRIL_LENGTH/2 - TENDRIL_R_BASE]) {
+                    sphere(r = TENDRIL_R_TIP);
                 }
             }
-
-            // Nut boss around the screw line — root nodule shape
-            translate([GM * (Z_PIN + Z_DRV) / 2, -(JAW_CLOSED + TENDRIL_R_TIP), 20]) {
-                sphere(r = NUT_OD/2 + 3);
-            }
         }
 
-        // Nut pocket — brass Z-nut slip-fits here; one drop of epoxy locks it in
-        translate([GM * (Z_PIN + Z_DRV) / 2, -(JAW_CLOSED + TENDRIL_R_TIP) - (NUT_W + 0.4)/2, 20]) {
-            rotate([90, 0, 0]) cylinder(h = NUT_W + 0.4, d = NUT_OD);
+        // Motor mounting holes — M3 tap-in-plastic on measured pattern
+        for (i = [-1:1:1])
+            for (j = [-1:1:1])
+                translate([0 + i * MOTOR_HOLE_SPACING / 2, TENDRIL_R_BASE * 2 + 5 + j * MOTOR_HOLE_SPACING / 2, -1]) {
+                    cylinder(h = 30 + 4, d = TAP_D);
+                }
+
+        // Mounting tab holes — bolt to wrist node output rod
+        tap_holes(0, -(TENDRIL_R_BASE * 2.5));
+    }
+}
+
+// ================= DRIVE TRAIN ==============================================
+module drive_train() {
+    // Pinion on motor shaft (D-cut bore + set-screw pilot)
+    translate([0, TENDRIL_R_BASE * 2 + 5, 20]) {
+        rotate([90, 0, 0]) {
+            drive_gear(Z_PIN, SHAFT_D + 0.2, pilot = true);
+        }
+    }
+
+    // Drive gear on lead screw end (flat keyway)
+    translate([TENDRIL_LENGTH/2 - 5, JAW_OPEN, 20]) {
+        rotate([90, 0, 0]) {
+            drive_gear(Z_DRV, LEAD_D + 0.1, flat_key = true);
         }
     }
 }
 
-// ================= LAYOUT FOR ONE PRINT ==================================
-union() {
-    gripper_body();                                             // origin
-    translate([TENDRIL_LENGTH + 25, -TENDRIL_R_BASE]) driven_tendril();   // right of body
-
-    // Pinion (motor shaft) and drive gear (lead-screw end), laid side by side
-    translate([TENDRIL_LENGTH + 30, TENDRIL_R_BASE * 2]) {
-        drive_gear(Z_PIN, SHAFT_D + 0.2, pilot = true);
-    }
-    translate([TENDRIL_LENGTH + 58, TENDRIL_R_BASE * 2]) {
-        drive_gear(Z_DRV, LEAD_D - 0.1, flat_key = true);
-    }
-}
-
-// Assembly:
-// 1. Pinion onto the wrist motor's D-cut shaft; M3 set screw through its pilot.
-// 2. Drive gear keyed onto the lead-screw's end (the internal flat stops it spinning).
-// 3. Driven tendril onto the screw with the nut in its pocket (epoxy dab); verify it slides freely.
-// 4. Wrist motor faceplate against the drive boss, four M3 screws; jog from Klipper console:
-//    one direction walks the tendril out = OPEN, reverse = CLOSE against fixed jaw.
+// ================= ASSEMBLY ==================================================
+gripper_body();
+drive_train();

@@ -16,7 +16,7 @@ include <../lib/parts_lib.scad>;
 $fn = 96;
 
 // ---------------- CONFIG — must match the joint_block you're building ----
-CONFIG = "SHOULDER";   // options: SHOULDER | BASE_ROTATE | ELBOW | WRIST
+CONFIG = "BASE_ROTATE";   // options: SHOULDER | BASE_ROTATE | ELBOW | WRIST
 // ------------------------------------------------------------------------
 
 // OpenSCAD uses ternary operators for conditional assignment
