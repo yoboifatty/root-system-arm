@@ -1,6 +1,6 @@
 // ============================================================
 // parts_lib.scad — SINGLE SOURCE OF TRUTH for all dimensions.
-// Root System Arm v2 — organic, tapered forms that look like
+// Root System Arm v3 — organic, tapered forms that look like
 // a living root system growing upward from the soil.
 // ============================================================
 
