@@ -1,96 +1,94 @@
 // ============================================================
-// base_stand.scad — ROOT BALL emerging from soil
+// base_stand.scad — ROOT BALL FOUNDATION
 // ------------------------------------------------------------
-// The foundation of the arm. Looks like a tangled root ball
-// growing up out of the ground, with spreading roots for stability.
-// Mates with the BASE_ROTATE joint node's parent tab.
+// The foundation of the arm, looking like a root ball emerging
+// from soil. Wide and stable with spreading roots for balance.
+// Motor mounts underneath for base rotation.
 // ============================================================
 
 include <../lib/parts_lib.scad>;
 
-$fn = 96;
+$fn = 128;
 
-AXIS_H   = 170;    // base joint axis height above desk
-X0_OFF   = 63.5;   // parent-tab pattern center sits this far below its own block's axis
-PATT_Z   = AXIS_H - X0_OFF;   // cheek pattern center height
+// Root ball dimensions — wide and stable
+BALL_RADIUS = 60;          // Radius of the root ball
+BALL_HEIGHT = 40;          // Height of the root ball
 
-// Root ball dimensions — organic, irregular shape
-BALL_R_BASE = 45;     // radius at soil level (widest)
-BALL_R_TOP  = 30;     // radius where main root emerges
-BALL_HEIGHT = 120;    // height of the root ball above soil
-SOIL_DEPTH  = 20;     // depth below soil line for stability
+// Spreading roots for stability
+ROOT_LENGTH = 50;          // Length of spreading roots
+ROOT_THICKNESS = 8;        // Thickness of spreading roots
 
-// Spreading roots — 4 roots radiating outward at base
-ROOT_LENGTH = 60;     // length of spreading roots
-ROOT_R      = 8;      // radius of spreading roots
-
-module pattern_clear() {
-    for (i = [-1:1:1])
-        for (j = [-1:1:1])
-            translate([i * TAB_HOLE_DX, -(BALL_R_TOP/2) - 5, PATT_Z + j * TAB_HOLE_DY]) {
-                rotate([90, 0, 0]) cylinder(h = BALL_R_TOP + 10, d = HOLE_D + 0.8);
-            }
-}
-
-// ================= ROOT BALL BASE STAND ======================================
-difference() {
-    union() {
-        // Main root ball — tapered organic form emerging from soil
-        translate([0, 0, -SOIL_DEPTH]) {
-            // Below soil (hidden stability mass)
-            cylinder(h = SOIL_DEPTH + 5, r1 = BALL_R_BASE * 1.2, r2 = BALL_R_BASE);
-
-            // Above soil — the visible root ball
-            translate([0, 0, SOIL_DEPTH]) {
-                // Lower section (wider at base)
-                cylinder(h = BALL_HEIGHT * 0.4, r1 = BALL_R_BASE, r2 = BALL_R_TOP * 1.3);
-
-                // Middle section (swollen root knot)
+module organic_root_ball() {
+    difference() {
+        union() {
+            // Main root ball body — wide, stable form
+            translate([0, 0, 0]) {
+                // Base section (widest)
+                cylinder(h = BALL_HEIGHT * 0.4, r1 = BALL_RADIUS, r2 = BALL_RADIUS * 0.9);
+                
+                // Middle section (swollen)
                 translate([0, 0, BALL_HEIGHT * 0.4]) {
-                    sphere(r = BALL_R_TOP * 1.2);
+                    cylinder(h = BALL_HEIGHT * 0.3, r1 = BALL_RADIUS * 0.9, r2 = BALL_RADIUS * 0.7);
                 }
-
-                // Upper section (tapering to main root)
-                translate([0, 0, BALL_HEIGHT * 0.6]) {
-                    cylinder(h = BALL_HEIGHT * 0.4, r1 = BALL_R_TOP * 1.2, r2 = BALL_R_TOP);
+                
+                // Top section (tapering)
+                translate([0, 0, BALL_HEIGHT * 0.7]) {
+                    cylinder(h = BALL_HEIGHT * 0.3, r1 = BALL_RADIUS * 0.7, r2 = BALL_RADIUS * 0.5);
                 }
             }
-        }
 
-        // Spreading roots — 4 roots radiating outward at base for stability
-        for (angle = [0:90:270]) {
-            translate([0, 0, -SOIL_DEPTH + 5]) {
-                rotate([0, 0, angle]) {
-                    hull() {
-                        // Root emerges from ball
-                        cylinder(h = 10, r1 = ROOT_R * 1.2, r2 = ROOT_R);
+            // Organic surface bumps — natural root texture
+            translate([BALL_RADIUS * 0.6, 0, BALL_HEIGHT * 0.5]) {
+                sphere(r = 12);
+            }
+            translate([-BALL_RADIUS * 0.4, BALL_RADIUS * 0.7, BALL_HEIGHT * 0.3]) {
+                sphere(r = 10);
+            }
+            translate([0, -BALL_RADIUS * 0.8, BALL_HEIGHT * 0.6]) {
+                sphere(r = 11);
+            }
 
-                        // Root spreads outward and slightly down
-                        translate([ROOT_LENGTH/2, 0, -5]) {
-                            cylinder(h = 10, r1 = ROOT_R, r2 = ROOT_R * 0.6);
-                        }
+            // Spreading roots for stability — like real root ball
+            for (i = [0:5]) {
+                let(angle = i * 60);
+                translate([BALL_RADIUS * cos(angle), BALL_RADIUS * sin(angle), BALL_HEIGHT * 0.2]) {
+                    rotate([90, 0, angle]) {
+                        cylinder(h = ROOT_LENGTH, r1 = ROOT_THICKNESS/2, r2 = ROOT_THICKNESS/4);
                     }
                 }
             }
-        }
 
-        // Main root stem — where the arm connects
-        translate([0, -(BALL_R_TOP/2), PATT_Z - 3]) {
-            cube([BALL_R_TOP + 10, BALL_R_TOP + 10, 6]);
-        }
-    }
-
-    // Mounting pattern clearance holes (clearance side — screws thread into joint node)
-    pattern_clear();
-
-    // Optional desk anchor slots at base
-    for (k = [-1:1]) {
-        translate([k * 40, BALL_R_BASE - 5, -SOIL_DEPTH - 1]) {
-            union() {
-                cube([36, 8, SOIL_DEPTH + 2]);
-                translate([-18, 0, 0]) cylinder(h = SOIL_DEPTH + 2, d = 5.5);
-                translate([18, 0, 0])  cylinder(h = SOIL_DEPTH + 2, d = 5.5);
+            // Mounting tab for base rotation node — root branch extending up
+            translate([-(BALL_RADIUS + 15), -TAB_HOLE_DY * 2 - 15, BALL_HEIGHT / 2 - 8]) {
+                hull() {
+                    cylinder(h = 12, r1 = 16/2, r2 = 10/2);
+                    translate([-(TAB_W/2 + 12), 0, 0]) cube([TAB_W + 24, TAB_HOLE_DY * 4 + 30, 12]);
+                }
             }
+        }
+
+        // Motor shaft pass-through — motor hangs below the root ball
+        translate([0, 0, -2]) cylinder(h = BALL_HEIGHT + 4, d = SHAFT_D + 1.5);
+
+        // Motor corner screws — M3 tap-in-plastic on measured pattern
+        for (i = [-1:1:1])
+            for (j = [-1:1:1])
+                translate([i * MOTOR_HOLE_SPACING / 2, j * MOTOR_HOLE_SPACING / 2, -2]) {
+                    cylinder(h = BALL_HEIGHT + 6, d = TAP_D);
+                }
+
+        // Tab holes — M3 tap-in-plastic
+        for (i = [-1:1:1])
+            for (j = [-1:1:1])
+                translate([-(BALL_RADIUS + 15) + i * TAB_HOLE_DX, -TAB_HOLE_DY * 2 - 15 + j * TAB_HOLE_DY, -2]) {
+                    cylinder(h = BALL_HEIGHT + 6, d = TAP_D);
+                }
+
+        // Counterweight pocket — for balancing the arm
+        translate([0, 0, BALL_HEIGHT/2]) {
+            cylinder(h = BALL_HEIGHT * 0.5, r1 = 30, r2 = 25);
         }
     }
 }
+
+organic_root_ball();
