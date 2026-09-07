@@ -1,29 +1,17 @@
 // ============================================================
-// gears_kit.scad — the FOUR GEARS + one shim for a rotary joint,
-// laid out side by side on the bed in a single print.
+// gears_elbow.scad — ELBOW GEAR KIT
 // ------------------------------------------------------------
-//   [1] pinion A  -> MOTOR shaft (D-cut bore + M3 set-screw pilot)
-//   [2] wheel A   -> intermediate rod, LEVEL 1, rests ON THE PLATE
-//   [3] shim      -> thin washer between wheel A and pinion B
-//   [4] pinion B  -> same intermediate rod, LEVEL 2, rests on the shim
-//   [5] output    -> axis rod, LEVEL 2; LIGHT PRESS-FIT bore
-//
-// Real involute teeth from OpenSCAD's standard library.
+// Four gears + one shim for the elbow joint.
+// 20:1 gear ratio (14->70 x 16->64) for faster movement with less torque.
+// Uses OpenSCAD's built-in involute() from standard library.
 // ============================================================
 
 include <../lib/parts_lib.scad>;
 
 $fn = 96;
 
-// ---------------- CONFIG — must match the joint_block you're building ----
-CONFIG = "ELBOW";   // options: SHOULDER | BASE_ROTATE | ELBOW | WRIST
-// ------------------------------------------------------------------------
-
-// OpenSCAD uses ternary operators for conditional assignment
-ZA_P = 14;
-ZA_W = (CONFIG == "ELBOW") ? 70 : ((CONFIG == "WRIST") ? 70 : 84);
-ZB_P = 16;
-ZB_W = (CONFIG == "ELBOW") ? 64 : ((CONFIG == "WRIST") ? 48 : 80);
+// Elbow gear ratio: 20:1 (faster than base/shoulder)
+ZA_P = 14; ZA_W = 70; ZB_P = 16; ZB_W = 64;
 
 // Bore fits over the Ø6 rod:
 BORE_LOOSE  = ROD_D + 0.2;    // wheel A / pinion B — easy to slide on
@@ -34,7 +22,6 @@ PITCH = GEAR_MODULE * (ZA_W + ZB_W) / 2 / sqrt(2) + 14;
 SHIM_X = PITCH + 64;
 
 // ---------- gear with bore (+ optional radial set-screw pilot) -----------
-// Uses OpenSCAD's built-in involute() from standard library
 module gear(z, bore_d, pilot = false) {
     difference() {
         linear_extrude(height = GEAR_H) involute(module = GEAR_MODULE, n = z);
