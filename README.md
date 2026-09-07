@@ -1,13 +1,13 @@
-# Root System Robotic Arm
+# Root System Robotic Arm v3
 
 A DIY 3D-printed robotic arm designed to look like an organic root system growing upward from the soil. Strong enough to lift 5 pounds, built from salvaged Ender-3 printer parts and controlled by Klipper firmware on a Raspberry Pi.
 
-## Design Philosophy
+## Design Philosophy — Living Root System
 
 Instead of rigid mechanical blocks bolted together, this arm uses organic, tapered forms inspired by real root systems:
 
-- **Joint nodes** are swollen root knots where branches split
-- **Crank arms** become tapered root branches that curve naturally between joints
+- **Joint nodes** are swollen root knots where branches split — each one unique in size and shape
+- **Crank arms** become curved, tapered root branches that grow naturally between joints
 - **Base stand** is a root ball emerging from the soil with spreading roots for stability
 - **Gripper** consists of delicate root tendrils that curl around objects to grasp them
 
@@ -27,12 +27,11 @@ The result looks like a living organism rather than a machine — but it's just 
 ```
 design/
 ├── lib/parts_lib.scad       — single source of truth for all dimensions
-├── joints/joint_block.scad  — root node joint blocks (set CONFIG: SHOULDER|BASE_ROTATE|ELBOW|WRIST)
-├── joints/gears_kit.scad    — gear kits for each joint (same CONFIG as its block)
-├── links/link_crank.scad    — tapered root branch connectors (CONFIG: A_BASE|B_SHOULDER|C_ELBOW|D_WRIST)
+├── joints/joint_*.scad      — organic root knot joint nodes (4 variants)
+├── joints/gears_*.scad      — gear kits for each joint (4 variants, 30:1/20:1/15:1 ratios)
+├── links/crank_*.scad       — curved, tapered root branch connectors (4 variants)
 ├── base/base_stand.scad     — root ball foundation with spreading roots
-├── gripper/gripper.scad     — root tendril gripper with gear-driven lead screw
-└── base_plate/base_plate.scad — soil bed test bench for bring-up testing
+└── gripper/gripper.scad     — root tendril gripper with gear-driven lead screw
 
 tools/
 ├── marlin_bridge.py         — HTTP bridge for motor testing during bring-up
@@ -44,20 +43,69 @@ docs/
 
 ## Getting Started
 
-1. **Measure your parts** with calipers (motor hole spacing, lead screw diameter, brass nut size)
-2. **Print test parts first:** soil bed + one shoulder node + its gear kit
-3. **Test one motor** before building anything — verify it spins correctly and doesn't overheat
-4. **Build joint by joint** following ASSEMBLY.md
-5. **Connect joints** with root branch connectors
-6. **Install gripper** and test gripping action
-7. **Route cables** neatly along the left side of the arm
+### 1. Measure Your Parts
+Grab your calipers and measure these three things:
+- Motor hole spacing (usually 31mm)
+- Lead screw diameter (usually 8mm)
+- Brass nut size (usually 20mm × 10mm)
 
-## Print Settings
+If any differ from the usual sizes, update `design/lib/parts_lib.scad` before printing.
 
-- **Material:** PETG or ABS
-- **Infill:** 40-50% (use 60% for gears)
-- **Walls:** 3 or more
-- **Bed size:** All parts fit on a 256mm bed (Bambu P1S compatible)
+### 2. Compile All STLs
+Run the Python compilation script:
+```bash
+python compile_stls.py
+```
+Or use the batch script on Windows:
+```batch
+compile_all.bat
+```
+
+This will generate all 14 STL files in the `stls/` folder.
+
+### 3. Print Test Parts First
+Don't print everything at once! Start with just enough to test that motors work:
+- One root ball base (base_stand.stl)
+- One shoulder node (joint_shoulder.stl)
+- One shoulder gear kit (gears_shoulder.stl)
+
+**Print settings for everything:**
+- Material: PETG or ABS plastic
+- Infill: 40-50% (use 60% for the gears)
+- Walls: 3 or more
+- No supports needed — all parts print flat
+
+### 4. Test One Motor Before Building Anything
+This is the most important step. Don't skip it!
+1. Bolt one motor underneath your root ball base (faceplate up, shaft pointing up)
+2. Wire that motor to ONE driver slot on your SKR board
+3. Power everything on (remember: set PSU switch to 110V first!)
+4. Use the marlin_bridge.py tool from your computer to jog the motor back and forth
+
+**What you're checking:**
+- Does the motor spin? ✓
+- Is it spinning the right direction? (If not, swap two wires)
+- Is it getting too hot after 2 minutes? (If yes, lower the current setting)
+
+Once one motor works perfectly, test all five motors this way before building the actual arm.
+
+### 5. Build Joint by Joint
+Follow ASSEMBLY.md for detailed step-by-step instructions on assembling each joint node with its gear kit and mounting tabs.
+
+### 6. Connect Joints with Root Branches
+Connect each node to the next using your printed root branches (crank_*.stl). Slide each branch over the exposed end of one node's output rod, push it up until flush against the next node's mounting tab, add epoxy inside the bore, and bolt through with four M3×16 screws.
+
+### 7. Install Root Tendril Gripper
+The gripper is special — it has its own motor and uses a lead screw to open and close the tendrils. Follow ASSEMBLY.md for detailed instructions.
+
+## Gear Ratios by Joint
+
+| Joint | Ratio | Purpose |
+|-------|-------|---------|
+| Base rotation | 30:1 | Maximum torque for rotating entire arm |
+| Shoulder | 30:1 | Maximum torque for lifting payload |
+| Elbow | 20:1 | Faster movement with less torque needed |
+| Wrist | 15:1 | Fastest movement for delicate manipulation |
 
 ## Hardware Required (Beyond Salvaged Parts)
 
