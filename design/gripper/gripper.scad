@@ -1,23 +1,23 @@
 // ============================================================
-// gripper.scad — ROOT TENDRILS that curl around objects
+// gripper.scad — ROOT TENDRIL GRIPPER
 // ------------------------------------------------------------
-// Bidirectional lead-screw actuator with organic, tapered jaws
-// that look like root tendrils reaching out and grasping.
+// Delicate root tendrils that curl around objects to grasp them.
+// Bidirectional lead-screw actuator with organic, tapered jaws.
 // Gear-driven: wrist motor -> pinion -> drive gear on lead screw.
 // ============================================================
 
 include <../lib/parts_lib.scad>;
 
-$fn = 96;
+$fn = 128;
 
 LEAD_D   = 8.0;    // MEASURE YOUR SALVAGED LEAD SCREW (diameter)
 NUT_OD   = 20.0;   // MEASURE your brass Z-nut OD
 NUT_W    = 10.0;   // ...and its width along the screw
 
 // Root tendril dimensions — tapered, organic forms
-TENDRIL_R_BASE = 10;     // radius at base (thicker)
-TENDRIL_R_TIP  = 4;      // radius at tip (delicate)
-TENDRIL_LENGTH = 80;     // length of each tendril jaw
+TENDRIL_R_BASE = 10;     // Radius at base (thicker)
+TENDRIL_R_TIP  = 4;      // Radius at tip (delicate)
+TENDRIL_LENGTH = 80;     // Length of each tendril jaw
 
 // Drive train: small involute pair, module 0.8 — printable with 3+ walls
 GM        = 0.8;                 // gear module for the gripper drive pair
@@ -124,23 +124,4 @@ module gripper_body() {
     }
 }
 
-// ================= DRIVE TRAIN ==============================================
-module drive_train() {
-    // Pinion on motor shaft (D-cut bore + set-screw pilot)
-    translate([0, TENDRIL_R_BASE * 2 + 5, 20]) {
-        rotate([90, 0, 0]) {
-            drive_gear(Z_PIN, SHAFT_D + 0.2, pilot = true);
-        }
-    }
-
-    // Drive gear on lead screw end (flat keyway)
-    translate([TENDRIL_LENGTH/2 - 5, JAW_OPEN, 20]) {
-        rotate([90, 0, 0]) {
-            drive_gear(Z_DRV, LEAD_D + 0.1, flat_key = true);
-        }
-    }
-}
-
-// ================= ASSEMBLY ==================================================
-gripper_body();
-drive_train();
+// ================= DRIVE TRAIN ==============================================\nmodule drive_train() {\n    // Pinion on motor shaft (D-cut bore + set-screw pilot)\n    translate([0, TENDRIL_R_BASE * 2 + 5, 20]) {\n        rotate([90, 0, 0]) {\n            drive_gear(Z_PIN, SHAFT_D + 0.2, pilot = true);\n        }\n    }\n\n    // Drive gear on lead screw end (flat keyway)\n    translate([TENDRIL_LENGTH/2 - 5, JAW_OPEN, 20]) {\n        rotate([90, 0, 0]) {\n            drive_gear(Z_DRV, LEAD_D + 0.1, flat_key = true);\n        }\n    }\n}\n\n// ================= ASSEMBLY ==================================================\ngripper_body();\ndrive_train();
